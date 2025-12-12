@@ -207,7 +207,7 @@ export function AllUsersTab({
   const effectiveUserTypes = hasRealData ? userTypes : MOCK_USER_TYPES
   const effectiveTags = hasRealData ? tags : MOCK_TAGS
 
-  const [users, setUsers] = useState<User[]>(effectiveUsers)
+  const [users, setUsers] = useState<User[]>(initialUsers)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({

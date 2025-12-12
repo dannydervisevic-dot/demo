@@ -10,7 +10,14 @@ export default async function UsersPage() {
     supabase
       .from("users")
       .select(`
-        *,
+        id,
+        email,
+        name,
+        phone_number,
+        language,
+        user_type_id,
+        created_at,
+        updated_at,
         user_type:user_types(id, name),
         user_tags(tag:tags(id, name))
       `)
@@ -19,15 +26,14 @@ export default async function UsersPage() {
     supabase.from("tags").select("*").order("name"),
   ])
 
-  // If there's an error (tables don't exist), use mock data to show the UI
-  const useMockData = usersError !== null
+  const databaseError = usersError?.message?.includes("relation") || usersError?.message?.includes("does not exist")
 
   return (
     <UsersManagementClient
       initialUsers={users || []}
       initialUserTypes={userTypes || []}
       initialTags={tags || []}
-      useMockData={useMockData}
+      useMockData={databaseError}
     />
   )
 }
