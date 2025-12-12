@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Globe } from "lucide-react"
-import { X } from "lucide-react"
+import { Globe, X, LayoutGrid } from "lucide-react"
 import {
   ChevronDown,
   Zap,
@@ -462,14 +461,17 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
             </Card>
           )}
           {selectedEvent && selectedUsers.length > 0 && (
-            <Card className="border-2 border-orange-200">
+            <Card className="border-2 border-orange-200 mt-6">
               <CardHeader className="bg-orange-50 dark:bg-orange-950/20">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-orange-900 dark:text-orange-100 mb-1">
+                    <CardTitle className="text-orange-900 dark:text-orange-100 mb-1 flex items-center gap-3">
+                      <LayoutGrid className="h-5 w-5 text-white" />
                       Step 3: Template Selection
                     </CardTitle>
-                    <CardDescription>Click on an "Available" template to fill placeholders and preview</CardDescription>
+                    <CardDescription className="text-sm font-normal text-muted-foreground">
+                      Select templates to configure and preview
+                    </CardDescription>
                   </div>
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1">
