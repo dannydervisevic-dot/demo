@@ -99,23 +99,51 @@ const mockSchemas = {
     level3: "High Usage Alert",
     description: "Alert sent when customer's energy consumption increases significantly",
     email: {
-      placeholders: ["customer_name", "consumption_percentage", "recommendation"],
-      subject: "High Energy Usage Alert - Action Required",
-      body: "Dear {{customer_name}},\n\nWe noticed your energy consumption has increased by {{consumption_percentage}}. To improve efficiency and reduce costs, we recommend: {{recommendation}}.\n\nBest regards,\nEnergy Portal Team",
+      EN: {
+        placeholders: ["customer_name", "consumption_percentage", "recommendation"],
+        subject: "High Energy Usage Alert - Action Required",
+        body: "Dear {{customer_name}},\n\nWe noticed your energy consumption has increased by {{consumption_percentage}}. To improve efficiency and reduce costs, we recommend: {{recommendation}}.\n\nBest regards,\nEnergy Portal Team",
+      },
+      SE: {
+        placeholders: ["customer_name", "consumption_percentage", "recommendation"],
+        subject: "Upozorenje na visoku potrošnju energije",
+        body: "Poštovani {{customer_name}},\n\nPrimetili smo da se vaša potrošnja energije povećala za {{consumption_percentage}}. Za bolju efikasnost preporučujemo: {{recommendation}}.\n\nSrdačan pozdrav,\nTim Energy Portala",
+      },
     },
     in_app: {
-      placeholders: ["customer_name", "consumption_percentage", "recommendation"],
-      title: "High Usage Alert",
-      message: "Hi {{customer_name}}, your consumption is up {{consumption_percentage}}. {{recommendation}}",
+      EN: {
+        placeholders: ["customer_name", "consumption_percentage", "recommendation"],
+        title: "High Usage Alert",
+        message: "Hi {{customer_name}}, your consumption is up {{consumption_percentage}}. {{recommendation}}",
+      },
+      SE: {
+        placeholders: ["customer_name", "consumption_percentage", "recommendation"],
+        title: "Upozorenje o visokoj potrošnji",
+        message:
+          "Zdravo {{customer_name}}, vaša potrošnja je porasla za {{consumption_percentage}}. {{recommendation}}",
+      },
     },
     push: {
-      placeholders: ["consumption_percentage"],
-      title: "Energy Alert",
-      message: "Usage increased by {{consumption_percentage}}",
+      EN: {
+        placeholders: ["consumption_percentage"],
+        title: "Energy Alert",
+        message: "Usage increased by {{consumption_percentage}}",
+      },
+      SE: {
+        placeholders: ["consumption_percentage"],
+        title: "Upozorenje o prekidu struje",
+        message: "Upozorenje: Potrošnja porasla za {{consumption_percentage}}. Proverite portal.",
+      },
     },
     sms: {
-      placeholders: ["consumption_percentage"],
-      message: "Energy Alert: Usage up {{consumption_percentage}}. Check your portal.",
+      EN: {
+        placeholders: ["consumption_percentage"],
+        message: "Energy Alert: Usage up {{consumption_percentage}}. Check your portal.",
+      },
+      SE: {
+        placeholders: ["consumption_percentage"],
+        message: "Upozorenje: Potrošnja porasla za {{consumption_percentage}}. Proverite portal.",
+      },
     },
   },
   invoice_generated: {
@@ -125,23 +153,50 @@ const mockSchemas = {
     level3: "Invoice Generated",
     description: "Notification when a new monthly invoice is available",
     email: {
-      placeholders: ["customer_name", "invoice_amount", "due_date"],
-      subject: "Your Energy Bill is Ready",
-      body: "Dear {{customer_name}},\n\nYour monthly energy bill of {{invoice_amount}} is now available. Payment is due by {{due_date}}.\n\nView and pay your bill in the customer portal.\n\nThank you for your business.",
+      EN: {
+        placeholders: ["customer_name", "invoice_amount", "due_date"],
+        subject: "Your Energy Bill is Ready",
+        body: "Dear {{customer_name}},\n\nYour monthly energy bill of {{invoice_amount}} is now available. Payment is due by {{due_date}}.\n\nView and pay your bill in the customer portal.\n\nThank you for your business.",
+      },
+      SE: {
+        placeholders: ["customer_name", "invoice_amount", "due_date"],
+        subject: "Vaša energijska faktura je spremna",
+        body: "Poštovani {{customer_name}},\n\nVaša mesečna energijska faktura od {{invoice_amount}} je sada dostupna. Plaćanje je dobrovoljno do {{due_date}}.\n\nPogledajte i oplati fakturu u korisničkom portalu.\n\nHvala vam na poslovanju.",
+      },
     },
     in_app: {
-      placeholders: ["invoice_amount", "due_date"],
-      title: "New Invoice Available",
-      message: "Your bill of {{invoice_amount}} is ready. Due date: {{due_date}}",
+      EN: {
+        placeholders: ["invoice_amount", "due_date"],
+        title: "New Invoice Available",
+        message: "Your bill of {{invoice_amount}} is ready. Due date: {{due_date}}",
+      },
+      SE: {
+        placeholders: ["invoice_amount", "due_date"],
+        title: "Nova faktura dostupna",
+        message: "Vaš račun od {{invoice_amount}} je spreman. Rok: {{due_date}}",
+      },
     },
     push: {
-      placeholders: ["invoice_amount"],
-      title: "New Bill",
-      message: "Your energy bill of {{invoice_amount}} is ready",
+      EN: {
+        placeholders: ["invoice_amount"],
+        title: "New Bill",
+        message: "Your energy bill of {{invoice_amount}} is ready",
+      },
+      SE: {
+        placeholders: ["invoice_amount"],
+        title: "Nova faktura",
+        message: "Vaš račun od {{invoice_amount}} je spreman",
+      },
     },
     sms: {
-      placeholders: ["invoice_amount", "due_date"],
-      message: "New bill: {{invoice_amount}}. Due: {{due_date}}. Pay in portal.",
+      EN: {
+        placeholders: ["invoice_amount", "due_date"],
+        message: "New bill: {{invoice_amount}}. Due: {{due_date}}. Pay in portal.",
+      },
+      SE: {
+        placeholders: ["invoice_amount", "due_date"],
+        message: "Nova faktura: {{invoice_amount}}. Rok: {{due_date}}. Platiće u portalu.",
+      },
     },
   },
   payment_received: {
@@ -151,23 +206,50 @@ const mockSchemas = {
     level3: "Payment Received",
     description: "Confirmation notification when payment is successfully processed",
     email: {
-      placeholders: ["customer_name", "payment_amount", "confirmation_number"],
-      subject: "Payment Received - Thank You",
-      body: "Dear {{customer_name}},\n\nWe've received your payment of {{payment_amount}}. Your confirmation number is {{confirmation_number}}.\n\nThank you for your prompt payment!",
+      EN: {
+        placeholders: ["customer_name", "payment_amount", "confirmation_number"],
+        subject: "Payment Received - Thank You",
+        body: "Dear {{customer_name}},\n\nWe've received your payment of {{payment_amount}}. Your confirmation number is {{confirmation_number}}.\n\nThank you for your prompt payment!",
+      },
+      SE: {
+        placeholders: ["customer_name", "payment_amount", "confirmation_number"],
+        subject: "Plaćanje primljeno - Hvala",
+        body: "Poštovani {{customer_name}},\n\nPrimili smo vašu uplatu od {{payment_amount}}. Broj potvrde je {{confirmation_number}}.\n\nHvala na blagovremenom plaćanju!",
+      },
     },
     in_app: {
-      placeholders: ["payment_amount", "confirmation_number"],
-      title: "Payment Confirmed",
-      message: "Payment of {{payment_amount}} received. Confirmation: {{confirmation_number}}",
+      EN: {
+        placeholders: ["payment_amount", "confirmation_number"],
+        title: "Payment Confirmed",
+        message: "Payment of {{payment_amount}} received. Confirmation: {{confirmation_number}}",
+      },
+      SE: {
+        placeholders: ["payment_amount", "confirmation_number"],
+        title: "Plaćanje potvrđeno",
+        message: "Uplata od {{payment_amount}} je primljena. Potvrda: {{confirmation_number}}",
+      },
     },
     push: {
-      placeholders: ["payment_amount"],
-      title: "Payment Successful",
-      message: "Payment of {{payment_amount}} confirmed",
+      EN: {
+        placeholders: ["payment_amount"],
+        title: "Payment Successful",
+        message: "Payment of {{payment_amount}} confirmed",
+      },
+      SE: {
+        placeholders: ["payment_amount"],
+        title: "Plaćanje uspešno",
+        message: "Uplata od {{payment_amount}} potvrđena",
+      },
     },
     sms: {
-      placeholders: ["payment_amount", "confirmation_number"],
-      message: "Payment received: {{payment_amount}}. Ref: {{confirmation_number}}",
+      EN: {
+        placeholders: ["payment_amount", "confirmation_number"],
+        message: "Payment received: {{payment_amount}}. Ref: {{confirmation_number}}",
+      },
+      SE: {
+        placeholders: ["payment_amount", "confirmation_number"],
+        message: "Plaćanje primljeno: {{payment_amount}}. Ref: {{confirmation_number}}",
+      },
     },
   },
   outage_detected: {
@@ -177,23 +259,50 @@ const mockSchemas = {
     level3: "Outage Detected",
     description: "Alert when power outage is detected in customer's area",
     email: {
-      placeholders: ["customer_name", "outage_location", "estimated_restoration"],
-      subject: "Power Outage Alert - We're Working On It",
-      body: "Dear {{customer_name}},\n\nWe've detected a power outage in {{outage_location}}. Our team is working to restore service by {{estimated_restoration}}.\n\nWe apologize for the inconvenience.",
+      EN: {
+        placeholders: ["customer_name", "outage_location", "estimated_restoration"],
+        subject: "Power Outage Alert - We're Working On It",
+        body: "Dear {{customer_name}},\n\nWe've detected a power outage in {{outage_location}}. Our team is working to restore service by {{estimated_restoration}}.\n\nWe apologize for the inconvenience.",
+      },
+      SE: {
+        placeholders: ["customer_name", "outage_location", "estimated_restoration"],
+        subject: "Upozorenje o prekidu struje - Radimo na to",
+        body: "Poštovani {{customer_name}},\n\nDetektovali smo prekid struje u {{outage_location}}. Naš tim radi na obnovi do {{estimated_restoration}}.\n\nIzvinjavamo se zbog neprijatnosti.",
+      },
     },
     in_app: {
-      placeholders: ["outage_location", "estimated_restoration"],
-      title: "Power Outage",
-      message: "Outage in {{outage_location}}. Estimated restoration: {{estimated_restoration}}",
+      EN: {
+        placeholders: ["outage_location", "estimated_restoration"],
+        title: "Power Outage",
+        message: "Outage in {{outage_location}}. Estimated restoration: {{estimated_restoration}}",
+      },
+      SE: {
+        placeholders: ["outage_location", "estimated_restoration"],
+        title: "Prekid struje",
+        message: "Prekid u {{outage_location}}. Procena obnove: {{estimated_restoration}}",
+      },
     },
     push: {
-      placeholders: ["estimated_restoration"],
-      title: "Power Outage Alert",
-      message: "Service interruption. Est. restoration: {{estimated_restoration}}",
+      EN: {
+        placeholders: ["estimated_restoration"],
+        title: "Power Outage Alert",
+        message: "Service interruption. Est. restoration: {{estimated_restoration}}",
+      },
+      SE: {
+        placeholders: ["estimated_restoration"],
+        title: "Upozorenje o prekidu struje",
+        message: "Prekid struje. Procena obnove: {{estimated_restoration}}",
+      },
     },
     sms: {
-      placeholders: ["estimated_restoration"],
-      message: "Power outage detected. Est. restoration: {{estimated_restoration}}",
+      EN: {
+        placeholders: ["estimated_restoration"],
+        message: "Power outage detected. Est. restoration: {{estimated_restoration}}",
+      },
+      SE: {
+        placeholders: ["estimated_restoration"],
+        message: "Prekid struje detektovan. Obnova: {{estimated_restoration}}",
+      },
     },
   },
 }

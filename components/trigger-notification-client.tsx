@@ -1,16 +1,16 @@
 "use client"
-
-import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Globe } from "lucide-react"
+import { X } from "lucide-react"
 import {
   ChevronDown,
   Zap,
@@ -64,6 +64,11 @@ type Event = {
 
 type Channel = "email" | "in_app" | "push" | "sms"
 
+type Language = {
+  code: string
+  name: string
+}
+
 type TriggerNotificationClientProps = {
   schemas: Record<string, any>
   users: User[]
@@ -76,6 +81,13 @@ const channelIcons = {
   sms: MessageSquare,
 }
 
+const availableLanguages: Language[] = [
+  { code: "EN", name: "English" },
+  { code: "ES", name: "Spanish" },
+  { code: "FR", name: "French" },
+  { code: "DE", name: "German" },
+]
+
 function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNotificationClientProps) {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([])
   const [expandedSubcategories, setExpandedSubcategories] = useState<string[]>([])
@@ -83,6 +95,7 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const [selectedTemplates, setSelectedTemplates] = useState<{ language: string; channel: string }[]>([])
   const [placeholders, setPlaceholders] = useState<{ [key: string]: string }>({
     customer_name: "",
     amount: "",
@@ -123,6 +136,7 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
     setSelectedUsers([])
     setSelectedChannels([])
     setPlaceholders({})
+    setSelectedTemplates([])
   }
 
   const toggleUser = (userId: string) => {
@@ -200,6 +214,7 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
       setSelectedUsers([])
       setSelectedChannels([])
       setPlaceholders({})
+      setSelectedTemplates([])
       router.refresh()
     } catch (error) {
       console.error("Error:", error)
@@ -217,23 +232,40 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
     }
 
     return json.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?|[{}[\],])/g,
       (match) => {
-        let cls = "text-yellow-400" // numbers
+        let cls = "text-orange-400" // numbers
         if (/^"/.test(match)) {
           if (/:$/.test(match)) {
-            cls = "text-blue-400" // keys
+            cls = "text-cyan-400" // keys
           } else {
-            cls = "text-green-400" // string values
+            cls = "text-lime-400" // string values
           }
         } else if (/true|false/.test(match)) {
           cls = "text-purple-400" // booleans
         } else if (/null/.test(match)) {
-          cls = "text-gray-400" // null
+          cls = "text-red-400" // null
+        } else if (/[{}[\],]/.test(match)) {
+          cls = "text-yellow-300" // braces, brackets, commas
         }
         return `<span class="${cls}">${match}</span>`
       },
     )
+  }
+
+  const getTemplateStatus = (language: string, channel: string): "ready" | "create" | "missing" => {
+    if (!selectedEvent) return "missing"
+    const template = schemas[selectedEvent.id]?.[channel]
+    if (template && template[language]) {
+      return "ready"
+    }
+    return Math.random() > 0.5 ? "create" : "missing" // Placeholder logic
+  }
+
+  const getLanguageTemplate = (language: string, channel: string) => {
+    if (!selectedEvent) return null
+    const channelTemplates = schemas[selectedEvent.id]?.[channel]
+    return channelTemplates?.[language] || channelTemplates // Fallback to default if no language-specific template
   }
 
   useEffect(() => {
@@ -430,78 +462,187 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
             </Card>
           )}
           {selectedEvent && selectedUsers.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-orange-600" />
-                  Step 3: Select Channels
-                </CardTitle>
-                <CardDescription>Choose notification channels (you can select multiple)</CardDescription>
+            <Card className="border-2 border-orange-200">
+              <CardHeader className="bg-orange-50 dark:bg-orange-950/20">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-orange-900 dark:text-orange-100 mb-1">
+                      Step 3: Template Selection
+                    </CardTitle>
+                    <CardDescription>Click on an "Available" template to fill placeholders and preview</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span>Available</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                      <span>Missing</span>
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {(["email", "in_app", "push", "sms"] as Channel[]).map((channel) => {
-                    const Icon = channelIcons[channel]
-                    const isSelected = selectedChannels.includes(channel)
-                    return (
-                      <button
-                        key={channel}
-                        onClick={() => {
-                          setSelectedChannels((prev) =>
-                            prev.includes(channel) ? prev.filter((c) => c !== channel) : [...prev, channel],
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-200 p-3 bg-gray-50 text-left">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <Globe className="h-4 w-4" />
+                            LANGUAGE
+                          </div>
+                        </th>
+                        {(["email", "sms", "in_app", "push"] as Channel[]).map((channel) => {
+                          const Icon = channelIcons[channel as Channel]
+                          return (
+                            <th key={channel} className="border border-gray-200 p-3 bg-gray-50">
+                              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 uppercase">
+                                <Icon className="h-4 w-4" />
+                                {channel === "in_app"
+                                  ? "IN-APP MESSAGES"
+                                  : channel === "email"
+                                    ? "EMAIL NOTIFICATIONS"
+                                    : channel === "sms"
+                                      ? "SMS ALERTS"
+                                      : "PUSH"}
+                              </div>
+                            </th>
                           )
-                        }}
-                        className={cn(
-                          "p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2",
-                          isSelected
-                            ? "border-orange-600 bg-orange-50 dark:bg-orange-950/30"
-                            : "border-border hover:border-orange-300 hover:bg-muted/50",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "p-3 rounded-full",
-                            isSelected ? "bg-orange-600 text-white" : "bg-muted text-muted-foreground",
-                          )}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span className="font-medium text-sm capitalize">
-                          {channel === "in_app" ? "In-App" : channel}
-                        </span>
-                      </button>
-                    )
-                  })}
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {availableLanguages.map((language) => (
+                        <tr key={language.code}>
+                          <td className="border border-gray-200 p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                                {language.code}
+                              </div>
+                              <span className="font-medium">{language.name}</span>
+                            </div>
+                          </td>
+                          {(["email", "sms", "in_app", "push"] as Channel[]).map((channel) => {
+                            const status = getTemplateStatus(language.code, channel)
+                            const isAvailable = status === "ready"
+                            const isSelected = selectedTemplates.some(
+                              (t) => t.language === language.code && t.channel === channel,
+                            )
+
+                            return (
+                              <td key={channel} className="border border-gray-200 p-3">
+                                <div className="flex justify-center">
+                                  <button
+                                    onClick={() => {
+                                      if (isAvailable) {
+                                        if (isSelected) {
+                                          setSelectedTemplates((prev) =>
+                                            prev.filter(
+                                              (t) => !(t.language === language.code && t.channel === channel),
+                                            ),
+                                          )
+                                        } else {
+                                          setSelectedTemplates((prev) => [
+                                            ...prev,
+                                            { language: language.code, channel },
+                                          ])
+                                          if (!selectedChannels.includes(channel)) {
+                                            setSelectedChannels((prev) => [...prev, channel])
+                                          }
+                                        }
+                                        setPlaceholders({})
+                                      }
+                                    }}
+                                    disabled={!isAvailable}
+                                    className={cn(
+                                      "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                                      isAvailable &&
+                                        !isSelected &&
+                                        "bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer",
+                                      isAvailable && isSelected && "bg-green-600 text-white ring-2 ring-green-400",
+                                      status === "missing" &&
+                                        "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200",
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={cn(
+                                          "w-2 h-2 rounded-full",
+                                          isAvailable && "bg-green-500",
+                                          status === "missing" && "bg-gray-400",
+                                        )}
+                                      ></div>
+                                      {isAvailable ? "Available" : "Missing"}
+                                    </div>
+                                  </button>
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
           )}
-          {selectedEvent && selectedUsers.length > 0 && selectedChannels.length > 0 && (
-            <div className="space-y-6">
-              {selectedChannels.map((channel) => {
-                const template = schemas[selectedEvent.id]?.[channel]
-                if (!template) return null
+          {selectedEvent && selectedUsers.length > 0 && selectedChannels.length > 0 && selectedTemplates.length > 0 && (
+            <div className="mt-6 space-y-6">
+              {selectedTemplates.map((template, index) => {
+                const templateData = schemas[selectedEvent!.id]?.[template.channel]?.[template.language]
+                if (!templateData) return null
+
+                const languageName =
+                  availableLanguages.find((l) => l.code === template.language)?.name || template.language
+
+                const channelIcons = {
+                  email: Mail,
+                  sms: MessageSquare,
+                  "in-app": Bell,
+                  push: Bell,
+                }
+                const ChannelIcon = channelIcons[template.channel as keyof typeof channelIcons]
 
                 return (
-                  <Card key={channel} className="border-2 border-orange-200">
-                    <CardHeader className="bg-orange-50 dark:bg-orange-950/20">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        {React.createElement(channelIcons[channel], { className: "h-5 w-5 text-orange-600" })}
-                        <span className="capitalize">{channel === "in_app" ? "In-App" : channel}</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6 space-y-6">
-                      {/* Placeholders Section */}
-                      <div>
-                        <Label className="text-sm font-semibold mb-3 block">4. Fill Placeholders</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {template.placeholders.map((placeholder: string) => (
+                  <div
+                    key={`${template.language}-${template.channel}-${index}`}
+                    className="border border-gray-200 rounded-lg p-6 bg-white"
+                  >
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                          <ChannelIcon className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-lg text-gray-900">{template.channel.toUpperCase()}</h4>
+                          <p className="text-sm text-gray-500">{languageName}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedTemplates((prev) =>
+                            prev.filter((t) => !(t.language === template.language && t.channel === template.channel)),
+                          )
+                        }}
+                        className="text-gray-400 hover:text-red-600 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Placeholder Fields */}
+                    {templateData.placeholders && templateData.placeholders.length > 0 && (
+                      <div className="mb-6">
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">Fill Placeholders:</h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          {templateData.placeholders.map((placeholder: string) => (
                             <div key={placeholder}>
-                              <Label htmlFor={`${channel}-${placeholder}`} className="text-xs">
-                                {placeholder.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                              </Label>
-                              <Input
-                                id={`${channel}-${placeholder}`}
+                              <label className="block text-sm text-gray-600 mb-1">{placeholder}</label>
+                              <input
+                                type="text"
                                 value={placeholders[placeholder] || ""}
                                 onChange={(e) =>
                                   setPlaceholders((prev) => ({
@@ -509,60 +650,54 @@ function TriggerNotificationClient({ schemas, users: initialUsers }: TriggerNoti
                                     [placeholder]: e.target.value,
                                   }))
                                 }
-                                placeholder={`Enter ${placeholder.replace(/_/g, " ")}`}
-                                className="mt-1"
+                                placeholder={`Enter ${placeholder}`}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                               />
                             </div>
                           ))}
                         </div>
                       </div>
+                    )}
 
-                      {/* Preview Section */}
-                      <div>
-                        <Label className="text-sm font-semibold mb-3 block">5. Preview</Label>
-                        <div className="p-4 bg-gray-50 rounded-lg border">
-                          {channel === "email" && (
-                            <div>
-                              <div className="mb-2 pb-2 border-b">
-                                <p className="text-xs text-gray-500">Subject:</p>
-                                <p className="font-medium">{fillPlaceholders(template.subject, placeholders)}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500 mb-1">Body:</p>
-                                <p className="text-sm whitespace-pre-wrap">
-                                  {fillPlaceholders(template.body, placeholders)}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {channel === "in_app" && (
-                            <div>
-                              <p className="font-medium mb-1">{fillPlaceholders(template.title, placeholders)}</p>
-                              <p className="text-sm text-gray-600">
-                                {fillPlaceholders(template.message, placeholders)}
-                              </p>
-                            </div>
-                          )}
-                          {channel === "push" && (
-                            <div className="flex items-start gap-3">
-                              <Bell className="h-5 w-5 text-orange-600 mt-1 flex-shrink-0" />
-                              <div>
-                                <p className="font-medium mb-1">{fillPlaceholders(template.title, placeholders)}</p>
-                                <p className="text-sm text-gray-600">
-                                  {fillPlaceholders(template.message, placeholders)}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {channel === "sms" && (
-                            <div>
-                              <p className="text-sm">{fillPlaceholders(template.message, placeholders)}</p>
-                            </div>
-                          )}
-                        </div>
+                    {/* Preview */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">Preview:</h5>
+                      <div className="space-y-3">
+                        {templateData.subject && (
+                          <div>
+                            <span className="text-xs text-gray-500">Subject:</span>
+                            <p className="font-medium">
+                              {templateData.subject.replace(/\{(\w+)\}/g, (_, key) => placeholders[key] || `{${key}}`)}
+                            </p>
+                          </div>
+                        )}
+                        {templateData.body && (
+                          <div>
+                            <span className="text-xs text-gray-500">Body:</span>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {templateData.body.replace(/\{(\w+)\}/g, (_, key) => placeholders[key] || `{${key}}`)}
+                            </p>
+                          </div>
+                        )}
+                        {templateData.title && (
+                          <div>
+                            <span className="text-xs text-gray-500">Title:</span>
+                            <p className="font-medium">
+                              {templateData.title.replace(/\{(\w+)\}/g, (_, key) => placeholders[key] || `{${key}}`)}
+                            </p>
+                          </div>
+                        )}
+                        {templateData.message && (
+                          <div>
+                            <span className="text-xs text-gray-500">Message:</span>
+                            <p className="text-sm">
+                              {templateData.message.replace(/\{(\w+)\}/g, (_, key) => placeholders[key] || `{${key}}`)}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )
               })}
             </div>

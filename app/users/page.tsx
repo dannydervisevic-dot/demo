@@ -11,6 +11,7 @@ export default async function UsersPage() {
       .from("users")
       .select(`
         id,
+        custom_id,
         email,
         name,
         phone_number,

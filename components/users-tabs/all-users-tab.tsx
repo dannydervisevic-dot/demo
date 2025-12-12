@@ -45,6 +45,7 @@ type Tag = {
 
 type User = {
   id: string
+  custom_id?: string | null // Added custom_id field
   email: string
   name: string
   phone_number?: string | null
@@ -73,6 +74,7 @@ const MOCK_TAGS: Tag[] = [
 const MOCK_USERS: User[] = [
   {
     id: "USR-2024-001",
+    custom_id: "CUST-XYZ-123", // Example custom_id
     email: "john.doe@example.com",
     name: "John Doe",
     phone_number: "+1-555-0101",
@@ -250,10 +252,14 @@ export function AllUsersTab({
         user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.custom_id?.toLowerCase().includes(searchQuery.toLowerCase()) || // Added search for custom_id
         user.phone_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.language?.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesUserId = filterUserId === "" || user.id?.toLowerCase().includes(filterUserId.toLowerCase())
+      const matchesUserId =
+        filterUserId === "" ||
+        user.id?.toLowerCase().includes(filterUserId.toLowerCase()) ||
+        user.custom_id?.toLowerCase().includes(filterUserId.toLowerCase()) // Added filter for custom_id
       const matchesName = filterName === "" || user.name?.toLowerCase().includes(filterName.toLowerCase())
       const matchesEmail = filterEmail === "" || user.email?.toLowerCase().includes(filterEmail.toLowerCase())
       const matchesPhone = filterPhone === "" || user.phone_number?.toLowerCase().includes(filterPhone.toLowerCase())
@@ -305,6 +311,7 @@ export function AllUsersTab({
 
     const userData = {
       ...formData,
+      custom_id: formData.custom_id || null, // Handle custom_id in form data
       user_type_id: formData.user_type_id || null,
       phone_number: formData.phone_number || null,
       language: formData.language || null,
@@ -329,7 +336,7 @@ export function AllUsersTab({
     }
 
     setIsCreateOpen(false)
-    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "", custom_id: "" }) // Reset custom_id
     setSelectedTags([])
     router.refresh()
     setIsLoading(false)
@@ -348,6 +355,7 @@ export function AllUsersTab({
 
     const userData = {
       ...formData,
+      custom_id: formData.custom_id || null, // Handle custom_id in form data
       user_type_id: formData.user_type_id || null,
       phone_number: formData.phone_number || null,
       language: formData.language || null,
@@ -374,7 +382,7 @@ export function AllUsersTab({
     }
 
     setEditingUser(null)
-    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "", custom_id: "" }) // Reset custom_id
     setSelectedTags([])
     router.refresh()
     setIsLoading(false)
@@ -407,13 +415,14 @@ export function AllUsersTab({
       phone_number: user.phone_number || "",
       language: user.language || "",
       user_type_id: user.user_type_id || "",
+      custom_id: user.custom_id || "", // Initialize custom_id in form data
     })
     setSelectedTags(user.user_tags?.map((ut) => ut.tag.id) || [])
   }
 
   const closeEditDialog = () => {
     setEditingUser(null)
-    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "", custom_id: "" }) // Reset custom_id
     setSelectedTags([])
   }
 
@@ -455,6 +464,7 @@ export function AllUsersTab({
       const fetchUsers = async () => {
         const { data, error } = await supabase.from("users").select(`
           id,
+          custom_id, // Include custom_id in selection
           email,
           name,
           phone_number,
@@ -499,7 +509,7 @@ export function AllUsersTab({
           <div className="relative flex-1 max-w-sm">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by ID, name, email, phone, or language..."
+              placeholder="Search by ID, custom ID, name, email, phone, or language..." // Updated placeholder
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -517,7 +527,7 @@ export function AllUsersTab({
               <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem checked={visibleColumns.id} onCheckedChange={() => toggleColumn("id")}>
-                User ID
+                User ID / Custom ID
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={visibleColumns.name} onCheckedChange={() => toggleColumn("name")}>
                 Name
@@ -657,6 +667,14 @@ export function AllUsersTab({
                   </Select>
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="custom_id">Custom ID</Label> {/* Added Custom ID field */}
+                  <Input
+                    id="custom_id"
+                    value={formData.custom_id}
+                    onChange={(e) => setFormData({ ...formData, custom_id: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label>Tags</Label>
                   <div className="border rounded-md p-3 space-y-2 max-h-[200px] overflow-y-auto">
                     {effectiveTags.map((tag) => (
@@ -694,7 +712,7 @@ export function AllUsersTab({
               {visibleColumns.id && (
                 <TableHead>
                   <div className="flex items-center gap-2">
-                    User ID
+                    User ID / Custom ID {/* Updated Table Head text */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="hover:bg-accent rounded p-1">
@@ -704,7 +722,7 @@ export function AllUsersTab({
                       <DropdownMenuContent align="start" className="w-56">
                         <div className="p-2">
                           <Input
-                            placeholder="Search User ID..."
+                            placeholder="Search User ID or Custom ID..." // Updated placeholder
                             value={filterUserId}
                             onChange={(e) => setFilterUserId(e.target.value)}
                             className="h-8"
@@ -1014,7 +1032,10 @@ export function AllUsersTab({
               filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   {visibleColumns.id && (
-                    <TableCell className="font-mono text-xs text-muted-foreground">{user.id}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {user.custom_id || user.id.slice(0, 8)}{" "}
+                      {/* Display custom_id if available, fallback to short UUID */}
+                    </TableCell>
                   )}
                   {visibleColumns.name && <TableCell className="font-medium">{user.name}</TableCell>}
                   {visibleColumns.email && <TableCell className="text-muted-foreground">{user.email}</TableCell>}
@@ -1167,6 +1188,14 @@ export function AllUsersTab({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-custom_id">Custom ID</Label> {/* Added Custom ID field */}
+                <Input
+                  id="edit-custom_id"
+                  value={formData.custom_id}
+                  onChange={(e) => setFormData({ ...formData, custom_id: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>Tags</Label>
