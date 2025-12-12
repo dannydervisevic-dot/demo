@@ -1,9 +1,7 @@
 "use client"
 
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-
 import { DropdownMenuLabel } from "@/components/ui/dropdown-menu"
-
 import type React from "react"
 import { useState, useMemo, useEffect } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
@@ -23,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Filter, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
+import { Filter, Plus, Pencil, Trash2, AlertCircle, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -49,6 +47,8 @@ type User = {
   id: string
   email: string
   name: string
+  phone_number?: string | null
+  language?: string | null
   user_type_id: string | null
   user_type?: UserType | null
   user_tags?: { tag: Tag }[]
@@ -72,9 +72,11 @@ const MOCK_TAGS: Tag[] = [
 
 const MOCK_USERS: User[] = [
   {
-    id: "1",
+    id: "USR-2024-001",
     email: "john.doe@example.com",
     name: "John Doe",
+    phone_number: "+1-555-0101",
+    language: "English",
     user_type_id: "1",
     user_type: MOCK_USER_TYPES[0],
     user_tags: [{ tag: MOCK_TAGS[0] }, { tag: MOCK_TAGS[3] }],
@@ -82,9 +84,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-01-15").toISOString(),
   },
   {
-    id: "2",
+    id: "USR-2024-002",
     email: "sarah.smith@example.com",
     name: "Sarah Smith",
+    phone_number: "+1-555-0102",
+    language: "English",
     user_type_id: "2",
     user_type: MOCK_USER_TYPES[1],
     user_tags: [{ tag: MOCK_TAGS[0] }, { tag: MOCK_TAGS[2] }],
@@ -92,9 +96,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-02-10").toISOString(),
   },
   {
-    id: "3",
+    id: "USR-2024-003",
     email: "mike.johnson@example.com",
     name: "Mike Johnson",
+    phone_number: "+1-555-0103",
+    language: "Spanish",
     user_type_id: "3",
     user_type: MOCK_USER_TYPES[2],
     user_tags: [{ tag: MOCK_TAGS[1] }],
@@ -102,9 +108,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-03-05").toISOString(),
   },
   {
-    id: "4",
+    id: "USR-2024-004",
     email: "emily.davis@example.com",
     name: "Emily Davis",
+    phone_number: "+1-555-0104",
+    language: "English",
     user_type_id: "3",
     user_type: MOCK_USER_TYPES[2],
     user_tags: [{ tag: MOCK_TAGS[2] }],
@@ -112,9 +120,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-03-20").toISOString(),
   },
   {
-    id: "5",
+    id: "USR-2024-005",
     email: "david.wilson@example.com",
     name: "David Wilson",
+    phone_number: "+1-555-0105",
+    language: "French",
     user_type_id: "2",
     user_type: MOCK_USER_TYPES[1],
     user_tags: [{ tag: MOCK_TAGS[1] }, { tag: MOCK_TAGS[3] }],
@@ -122,9 +132,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-04-12").toISOString(),
   },
   {
-    id: "6",
+    id: "USR-2024-006",
     email: "lisa.brown@example.com",
     name: "Lisa Brown",
+    phone_number: "+1-555-0106",
+    language: "English",
     user_type_id: "3",
     user_type: MOCK_USER_TYPES[2],
     user_tags: [{ tag: MOCK_TAGS[2] }],
@@ -132,9 +144,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-05-08").toISOString(),
   },
   {
-    id: "7",
+    id: "USR-2024-007",
     email: "james.taylor@example.com",
     name: "James Taylor",
+    phone_number: null,
+    language: "English",
     user_type_id: "4",
     user_type: MOCK_USER_TYPES[3],
     user_tags: [],
@@ -142,9 +156,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-06-01").toISOString(),
   },
   {
-    id: "8",
+    id: "USR-2024-008",
     email: "anna.martinez@example.com",
     name: "Anna Martinez",
+    phone_number: "+1-555-0108",
+    language: "Spanish",
     user_type_id: "3",
     user_type: MOCK_USER_TYPES[2],
     user_tags: [{ tag: MOCK_TAGS[2] }],
@@ -152,9 +168,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-07-15").toISOString(),
   },
   {
-    id: "9",
+    id: "USR-2024-009",
     email: "robert.anderson@example.com",
     name: "Robert Anderson",
+    phone_number: "+1-555-0109",
+    language: "English",
     user_type_id: "2",
     user_type: MOCK_USER_TYPES[1],
     user_tags: [{ tag: MOCK_TAGS[0] }],
@@ -162,9 +180,11 @@ const MOCK_USERS: User[] = [
     updated_at: new Date("2024-08-22").toISOString(),
   },
   {
-    id: "10",
+    id: "USR-2024-010",
     email: "jennifer.thomas@example.com",
     name: "Jennifer Thomas",
+    phone_number: "+1-555-0110",
+    language: "German",
     user_type_id: "3",
     user_type: MOCK_USER_TYPES[2],
     user_tags: [{ tag: MOCK_TAGS[1] }, { tag: MOCK_TAGS[2] }],
@@ -193,13 +213,33 @@ export function AllUsersTab({
   const [formData, setFormData] = useState({
     email: "",
     name: "",
+    phone_number: "",
+    language: "",
     user_type_id: "",
   })
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+
+  const [filterUserId, setFilterUserId] = useState("")
+  const [filterName, setFilterName] = useState("")
+  const [filterEmail, setFilterEmail] = useState("")
+  const [filterPhone, setFilterPhone] = useState("")
+  const [filterLanguages, setFilterLanguages] = useState<string[]>([])
   const [filterUserTypes, setFilterUserTypes] = useState<string[]>([])
   const [filterTags, setFilterTags] = useState<string[]>([])
+
+  const [visibleColumns, setVisibleColumns] = useState({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+    language: true,
+    userType: true,
+    tags: true,
+    created: true,
+  })
+
   const router = useRouter()
   const supabase = createBrowserClient()
 
@@ -207,17 +247,51 @@ export function AllUsersTab({
     return users.filter((user) => {
       const matchesSearch =
         searchQuery === "" ||
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phone_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.language?.toLowerCase().includes(searchQuery.toLowerCase())
 
+      const matchesUserId = filterUserId === "" || user.id?.toLowerCase().includes(filterUserId.toLowerCase())
+      const matchesName = filterName === "" || user.name?.toLowerCase().includes(filterName.toLowerCase())
+      const matchesEmail = filterEmail === "" || user.email?.toLowerCase().includes(filterEmail.toLowerCase())
+      const matchesPhone = filterPhone === "" || user.phone_number?.toLowerCase().includes(filterPhone.toLowerCase())
+      const matchesLanguage = filterLanguages.length === 0 || (user.language && filterLanguages.includes(user.language))
       const matchesUserType =
         filterUserTypes.length === 0 || (user.user_type_id && filterUserTypes.includes(user.user_type_id))
-
       const matchesTag = filterTags.length === 0 || user.user_tags?.some((ut) => filterTags.includes(ut.tag.id))
 
-      return matchesSearch && matchesUserType && matchesTag
+      return (
+        matchesSearch &&
+        matchesUserId &&
+        matchesName &&
+        matchesEmail &&
+        matchesPhone &&
+        matchesLanguage &&
+        matchesUserType &&
+        matchesTag
+      )
     })
-  }, [users, searchQuery, filterUserTypes, filterTags])
+  }, [
+    users,
+    searchQuery,
+    filterUserId,
+    filterName,
+    filterEmail,
+    filterPhone,
+    filterLanguages,
+    filterUserTypes,
+    filterTags,
+  ])
+
+  const uniqueLanguages = useMemo(() => {
+    const langs = new Set<string>()
+    users.forEach((user) => {
+      if (user.language) langs.add(user.language)
+    })
+    return Array.from(langs).sort()
+  }, [users])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -232,6 +306,8 @@ export function AllUsersTab({
     const userData = {
       ...formData,
       user_type_id: formData.user_type_id || null,
+      phone_number: formData.phone_number || null,
+      language: formData.language || null,
     }
 
     const { data: user, error } = await supabase.from("users").insert([userData]).select().single()
@@ -253,7 +329,7 @@ export function AllUsersTab({
     }
 
     setIsCreateOpen(false)
-    setFormData({ email: "", name: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
     setSelectedTags([])
     router.refresh()
     setIsLoading(false)
@@ -273,6 +349,8 @@ export function AllUsersTab({
     const userData = {
       ...formData,
       user_type_id: formData.user_type_id || null,
+      phone_number: formData.phone_number || null,
+      language: formData.language || null,
     }
 
     const { error } = await supabase.from("users").update(userData).eq("id", editingUser.id)
@@ -296,7 +374,7 @@ export function AllUsersTab({
     }
 
     setEditingUser(null)
-    setFormData({ email: "", name: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
     setSelectedTags([])
     router.refresh()
     setIsLoading(false)
@@ -326,6 +404,8 @@ export function AllUsersTab({
     setFormData({
       email: user.email,
       name: user.name,
+      phone_number: user.phone_number || "",
+      language: user.language || "",
       user_type_id: user.user_type_id || "",
     })
     setSelectedTags(user.user_tags?.map((ut) => ut.tag.id) || [])
@@ -333,7 +413,7 @@ export function AllUsersTab({
 
   const closeEditDialog = () => {
     setEditingUser(null)
-    setFormData({ email: "", name: "", user_type_id: "" })
+    setFormData({ email: "", name: "", phone_number: "", language: "", user_type_id: "" })
     setSelectedTags([])
   }
 
@@ -341,8 +421,14 @@ export function AllUsersTab({
     setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
   }
 
+  // Updated clearFilters to include all column filters
   const clearFilters = () => {
     setSearchQuery("")
+    setFilterUserId("")
+    setFilterName("")
+    setFilterEmail("")
+    setFilterPhone("")
+    setFilterLanguages([])
     setFilterUserTypes([])
     setFilterTags([])
   }
@@ -355,15 +441,38 @@ export function AllUsersTab({
     setFilterTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
   }
 
+  const toggleLanguageFilter = (language: string) => {
+    setFilterLanguages((prev) => (prev.includes(language) ? prev.filter((l) => l !== language) : [...prev, language]))
+  }
+
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns((prev) => ({ ...prev, [column]: !prev[column] }))
+  }
+
   useEffect(() => {
     if (hasRealData) {
       // Fetch real data from the database
       const fetchUsers = async () => {
-        const { data, error } = await supabase.from("users").select("*")
+        const { data, error } = await supabase.from("users").select(`
+          id,
+          email,
+          name,
+          phone_number,
+          language,
+          user_type_id,
+          user_type:user_types(id, name),
+          user_tags:user_tags(tag:tags(id, name))
+        `)
         if (error) {
           console.error("Error fetching users:", error)
         } else {
-          setUsers(data)
+          // Ensure data structure matches User type, especially for user_tags
+          const formattedData = data.map((user) => ({
+            ...user,
+            user_type: user.user_type ? user.user_type : null,
+            user_tags: user.user_tags || [], // Ensure user_tags is an array
+          }))
+          setUsers(formattedData)
         }
       }
 
@@ -390,19 +499,76 @@ export function AllUsersTab({
           <div className="relative flex-1 max-w-sm">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by ID, name, email, phone, or language..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
             />
           </div>
 
-          {(searchQuery || filterUserTypes.length > 0 || filterTags.length > 0) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-2" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem checked={visibleColumns.id} onCheckedChange={() => toggleColumn("id")}>
+                User ID
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={visibleColumns.name} onCheckedChange={() => toggleColumn("name")}>
+                Name
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={visibleColumns.email} onCheckedChange={() => toggleColumn("email")}>
+                Email
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={visibleColumns.phone} onCheckedChange={() => toggleColumn("phone")}>
+                Phone Number
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.language}
+                onCheckedChange={() => toggleColumn("language")}
+              >
+                Language
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.userType}
+                onCheckedChange={() => toggleColumn("userType")}
+              >
+                User Type
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={visibleColumns.tags} onCheckedChange={() => toggleColumn("tags")}>
+                Tags
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.created}
+                onCheckedChange={() => toggleColumn("created")}
+              >
+                Created
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Updated condition to include all column filters */}
+          {(searchQuery ||
+            filterUserId ||
+            filterName ||
+            filterEmail ||
+            filterPhone ||
+            filterLanguages.length > 0 ||
+            filterUserTypes.length > 0 ||
+            filterTags.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               <AlertCircle className="h-4 w-4 mr-1" />
               Clear Filters
-              {filterUserTypes.length + filterTags.length > 0 && (
-                <span className="ml-1 text-xs">({filterUserTypes.length + filterTags.length})</span>
+              {/* Updated count to include all filter types */}
+              {filterUserTypes.length + filterTags.length + filterLanguages.length > 0 && (
+                <span className="ml-1 text-xs">
+                  ({filterUserTypes.length + filterTags.length + filterLanguages.length})
+                </span>
               )}
             </Button>
           )}
@@ -415,7 +581,7 @@ export function AllUsersTab({
               Add User
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleCreate}>
               <DialogHeader>
                 <DialogTitle>Create User</DialogTitle>
@@ -440,6 +606,37 @@ export function AllUsersTab({
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1-555-0123"
+                    value={formData.phone_number}
+                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="language">Language</Label>
+                  <Select
+                    value={formData.language}
+                    onValueChange={(value) => setFormData({ ...formData, language: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="English">English</SelectItem>
+                      <SelectItem value="Spanish">Spanish</SelectItem>
+                      <SelectItem value="French">French</SelectItem>
+                      <SelectItem value="German">German</SelectItem>
+                      <SelectItem value="Italian">Italian</SelectItem>
+                      <SelectItem value="Portuguese">Portuguese</SelectItem>
+                      <SelectItem value="Chinese">Chinese</SelectItem>
+                      <SelectItem value="Japanese">Japanese</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="user_type">User Type</Label>
@@ -490,143 +687,396 @@ export function AllUsersTab({
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  User Type
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="hover:bg-accent rounded p-1">
-                        <Filter
-                          className={`h-4 w-4 ${filterUserTypes.length > 0 ? "text-primary" : "text-muted-foreground"}`}
-                        />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      <DropdownMenuLabel>Filter by User Type</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {effectiveUserTypes.map((type) => (
-                        <DropdownMenuCheckboxItem
-                          key={type.id}
-                          checked={filterUserTypes.includes(type.id)}
-                          onCheckedChange={() => toggleUserTypeFilter(type.id)}
-                        >
-                          {type.name}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                      {filterUserTypes.length > 0 && (
-                        <>
-                          <DropdownMenuSeparator />
+              {visibleColumns.id && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    User ID
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter className={`h-4 w-4 ${filterUserId ? "text-primary" : "text-muted-foreground"}`} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <div className="p-2">
+                          <Input
+                            placeholder="Search User ID..."
+                            value={filterUserId}
+                            onChange={(e) => setFilterUserId(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        {filterUserId && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterUserId("")}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.name && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Name
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter className={`h-4 w-4 ${filterName ? "text-primary" : "text-muted-foreground"}`} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <div className="p-2">
+                          <Input
+                            placeholder="Search name..."
+                            value={filterName}
+                            onChange={(e) => setFilterName(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        {filterName && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterName("")}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.email && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Email
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter className={`h-4 w-4 ${filterEmail ? "text-primary" : "text-muted-foreground"}`} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <div className="p-2">
+                          <Input
+                            placeholder="Search email..."
+                            value={filterEmail}
+                            onChange={(e) => setFilterEmail(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        {filterEmail && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterEmail("")}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.phone && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Phone Number
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter className={`h-4 w-4 ${filterPhone ? "text-primary" : "text-muted-foreground"}`} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <div className="p-2">
+                          <Input
+                            placeholder="Search phone..."
+                            value={filterPhone}
+                            onChange={(e) => setFilterPhone(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        {filterPhone && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterPhone("")}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.language && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Language
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter
+                            className={`h-4 w-4 ${filterLanguages.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                          />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Filter by Language</div>
+                        <DropdownMenuSeparator />
+                        {uniqueLanguages.map((language) => (
                           <button
-                            onClick={() => setFilterUserTypes([])}
-                            className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            key={language}
+                            className={`w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm flex items-center gap-2 ${filterLanguages.includes(language) ? "bg-accent" : ""}`}
+                            onClick={() => toggleLanguageFilter(language)}
                           >
-                            Clear filter
+                            <div
+                              className={`w-4 h-4 border rounded flex items-center justify-center ${filterLanguages.includes(language) ? "bg-primary border-primary" : ""}`}
+                            >
+                              {filterLanguages.includes(language) && (
+                                <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                                  <path
+                                    d="M10 3L4.5 8.5L2 6"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            {language}
                           </button>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  Tags
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="hover:bg-accent rounded p-1">
-                        <Filter
-                          className={`h-4 w-4 ${filterTags.length > 0 ? "text-primary" : "text-muted-foreground"}`}
-                        />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {effectiveTags.map((tag) => (
-                        <DropdownMenuCheckboxItem
-                          key={tag.id}
-                          checked={filterTags.includes(tag.id)}
-                          onCheckedChange={() => toggleTagFilter(tag.id)}
-                        >
-                          {tag.name}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                      {filterTags.length > 0 && (
-                        <>
-                          <DropdownMenuSeparator />
+                        ))}
+                        {filterLanguages.length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterLanguages([])}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.userType && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    User Type
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter
+                            className={`h-4 w-4 ${filterUserTypes.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                          />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Filter by User Type</div>
+                        <DropdownMenuSeparator />
+                        {effectiveUserTypes.map((type) => (
                           <button
-                            onClick={() => setFilterTags([])}
-                            className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            key={type.id}
+                            className={`w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm flex items-center gap-2 ${filterUserTypes.includes(type.id) ? "bg-accent" : ""}`}
+                            onClick={() => toggleUserTypeFilter(type.id)}
                           >
-                            Clear filter
+                            <div
+                              className={`w-4 h-4 border rounded flex items-center justify-center ${filterUserTypes.includes(type.id) ? "bg-primary border-primary" : ""}`}
+                            >
+                              {filterUserTypes.includes(type.id) && (
+                                <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                                  <path
+                                    d="M10 3L4.5 8.5L2 6"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            {type.name}
                           </button>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+                        ))}
+                        {filterUserTypes.length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterUserTypes([])}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.tags && (
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Tags
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:bg-accent rounded p-1">
+                          <Filter
+                            className={`h-4 w-4 ${filterTags.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                          />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Filter by Tag</div>
+                        <DropdownMenuSeparator />
+                        {effectiveTags.map((tag) => (
+                          <button
+                            key={tag.id}
+                            className={`w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm flex items-center gap-2 ${filterTags.includes(tag.id) ? "bg-accent" : ""}`}
+                            onClick={() => toggleTagFilter(tag.id)}
+                          >
+                            <div
+                              className={`w-4 h-4 border rounded flex items-center justify-center ${filterTags.includes(tag.id) ? "bg-primary border-primary" : ""}`}
+                            >
+                              {filterTags.includes(tag.id) && (
+                                <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                                  <path
+                                    d="M10 3L4.5 8.5L2 6"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            {tag.name}
+                          </button>
+                        ))}
+                        {filterTags.length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <button
+                              onClick={() => setFilterTags([])}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableHead>
+              )}
+              {visibleColumns.created && <TableHead>Created</TableHead>}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell
+                  colSpan={Object.values(visibleColumns).filter(Boolean).length + 1}
+                  className="text-center text-muted-foreground py-8"
+                >
                   {users.length === 0 ? "No users found. Create one to get started." : "No users match your filters."}
                 </TableCell>
               </TableRow>
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                  <TableCell>
-                    {user.user_type ? (
-                      <Badge variant="secondary">{user.user_type.name}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.user_tags && user.user_tags.length > 0 ? (
-                      <TooltipProvider>
-                        <Tooltip delayDuration={100}>
-                          <TooltipTrigger asChild>
-                            <button className="text-sm font-medium text-primary hover:underline cursor-pointer">
-                              {user.user_tags.length} {user.user_tags.length === 1 ? "tag" : "tags"}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-3 max-w-xs" side="top">
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold text-muted-foreground">User Tags</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {user.user_tags.map((ut) => (
-                                  <Badge key={ut.tag.id} variant="secondary" className="text-xs">
-                                    {ut.tag.name}
-                                  </Badge>
-                                ))}
+                  {visibleColumns.id && (
+                    <TableCell className="font-mono text-xs text-muted-foreground">{user.id}</TableCell>
+                  )}
+                  {visibleColumns.name && <TableCell className="font-medium">{user.name}</TableCell>}
+                  {visibleColumns.email && <TableCell className="text-muted-foreground">{user.email}</TableCell>}
+                  {visibleColumns.phone && (
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.phone_number || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                  )}
+                  {visibleColumns.language && (
+                    <TableCell>
+                      {user.language ? (
+                        <Badge variant="outline">{user.language}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {visibleColumns.userType && (
+                    <TableCell>
+                      {user.user_type ? (
+                        <Badge variant="secondary">{user.user_type.name}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {visibleColumns.tags && (
+                    <TableCell>
+                      {user.user_tags && user.user_tags.length > 0 ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={100}>
+                            <TooltipTrigger asChild>
+                              <button className="text-sm font-medium text-primary hover:underline cursor-pointer">
+                                {user.user_tags.length} {user.user_tags.length === 1 ? "tag" : "tags"}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="p-3 max-w-xs" side="top">
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-muted-foreground">User Tags</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {user.user_tags.map((ut) => (
+                                    <Badge key={ut.tag.id} variant="secondary" className="text-xs">
+                                      {ut.tag.name}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {visibleColumns.created && (
+                    <TableCell className="text-muted-foreground text-sm">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <Button variant="ghost" size="icon" onClick={() => openEditDialog(user)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -643,7 +1093,7 @@ export function AllUsersTab({
       </div>
 
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && closeEditDialog()}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleUpdate}>
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
@@ -668,6 +1118,37 @@ export function AllUsersTab({
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-phone">Phone Number</Label>
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  placeholder="+1-555-0123"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-language">Language</Label>
+                <Select
+                  value={formData.language}
+                  onValueChange={(value) => setFormData({ ...formData, language: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Spanish">Spanish</SelectItem>
+                    <SelectItem value="French">French</SelectItem>
+                    <SelectItem value="German">German</SelectItem>
+                    <SelectItem value="Italian">Italian</SelectItem>
+                    <SelectItem value="Portuguese">Portuguese</SelectItem>
+                    <SelectItem value="Chinese">Chinese</SelectItem>
+                    <SelectItem value="Japanese">Japanese</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-user_type">User Type</Label>

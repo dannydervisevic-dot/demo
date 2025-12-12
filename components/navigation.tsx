@@ -12,12 +12,12 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
-    label: "Notification Categories",
+    label: "Notification Management",
     href: "/notification-categories",
     icon: Layers,
   },
   {
-    label: "Users",
+    label: "User Management",
     href: "/users",
     icon: Users,
   },
