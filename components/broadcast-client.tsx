@@ -1,12 +1,14 @@
 "use client"
 
+import { TooltipContent } from "@/components/ui/tooltip"
+
 import type React from "react"
 import { useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Send,
@@ -30,12 +32,14 @@ import {
   TrendingUp,
   Calendar,
   Clock,
+  Eye,
 } from "lucide-react"
 import { Navigation } from "@/components/navigation"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useRouter } from "next/navigation"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip" // Added from updates
 
 type UserType = {
   id: string
@@ -73,6 +77,7 @@ type BroadcastClientProps = {
   users: User[]
 }
 
+// Modified export to accept initial props and manage active tab state
 export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastClientProps) {
   const [selectedNotification, setSelectedNotification] = useState<NotificationSchema | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
@@ -101,6 +106,11 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
   const supabase = createClient()
 
   const [notificationSearch, setNotificationSearch] = useState("")
+  const [activeTab, setActiveTab] = useState("create") // State for active tab
+
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewChannel, setPreviewChannel] = useState<"email" | "inApp" | "push" | "sms">("email")
+  const [previewBroadcast, setPreviewBroadcast] = useState<any>(null)
 
   const categorizedSchemas = schemas.reduce(
     (acc, schema) => {
@@ -308,6 +318,41 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
       channels: { email: 78, inApp: 45, push: 25, sms: 2 },
     },
   ]
+
+  const handlePreview = (broadcast?: any) => {
+    if (broadcast) {
+      setPreviewBroadcast(broadcast)
+    }
+    setShowPreview(true)
+  }
+
+  const getPreviewContent = (channel: string, broadcast?: any) => {
+    const notificationTitle = broadcast?.notification || selectedNotification?.level3 || "Notification"
+
+    switch (channel) {
+      case "email":
+        return {
+          subject: `${notificationTitle}`,
+          body: `Dear valued customer,\n\nWe wanted to inform you about ${notificationTitle.toLowerCase()}.\n\nThis is an important update regarding your energy consumption and account status. Please review the details and take action if necessary.\n\nBest regards,\nYour Energy Team`,
+        }
+      case "inApp":
+        return {
+          title: notificationTitle,
+          message: `You have a new notification: ${notificationTitle}. Click to view details.`,
+        }
+      case "push":
+        return {
+          title: notificationTitle,
+          body: `New update: ${notificationTitle}. Tap to view more.`,
+        }
+      case "sms":
+        return {
+          message: `${notificationTitle}. Visit our portal for more details.`,
+        }
+      default:
+        return {}
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -549,24 +594,31 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
                   )}
 
                   {selectedNotification && (
-                    <Button
-                      onClick={handleBroadcast}
-                      disabled={isLoading || targetedUsers.length === 0}
-                      size="lg"
-                      className="w-full"
-                    >
-                      {isSending ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Sending to {targetedUsers.length} users...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="mr-2 h-5 w-5" />
-                          Broadcast to {targetedUsers.length} Users
-                        </>
-                      )}
-                    </Button>
+                    <CardFooter className="flex-col gap-3 pt-6">
+                      <Button onClick={() => handlePreview()} variant="outline" size="lg" className="w-full">
+                        <Eye className="mr-2 h-5 w-5" />
+                        Preview Broadcast
+                      </Button>
+
+                      <Button
+                        onClick={handleBroadcast}
+                        disabled={isLoading || targetedUsers.length === 0}
+                        size="lg"
+                        className="w-full"
+                      >
+                        {isSending ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Sending to {targetedUsers.length} users...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-5 w-5" />
+                            Broadcast to {targetedUsers.length} Users
+                          </>
+                        )}
+                      </Button>
+                    </CardFooter>
                   )}
                 </div>
 
@@ -677,22 +729,89 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
                         </div>
 
                         <div className="flex flex-wrap gap-3 pt-3">
-                          <Badge variant="outline" className="gap-2 px-3 py-1.5 text-sm">
-                            <Mail className="h-4 w-4" />
-                            {broadcast.channels.email}
-                          </Badge>
-                          <Badge variant="outline" className="gap-2 px-3 py-1.5 text-sm">
-                            <MessageSquare className="h-4 w-4" />
-                            {broadcast.channels.inApp}
-                          </Badge>
-                          <Badge variant="outline" className="gap-2 px-3 py-1.5 text-sm">
-                            <Bell className="h-4 w-4" />
-                            {broadcast.channels.push}
-                          </Badge>
-                          <Badge variant="outline" className="gap-2 px-3 py-1.5 text-sm">
-                            <MessageCircle className="h-4 w-4" />
-                            {broadcast.channels.sms}
-                          </Badge>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="outline"
+                                  className="gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                  onClick={() => {
+                                    setPreviewChannel("email")
+                                    handlePreview(broadcast)
+                                  }}
+                                >
+                                  <Mail className="h-4 w-4" />
+                                  {broadcast.channels.email}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Click to preview broadcasted message</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="outline"
+                                  className="gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                  onClick={() => {
+                                    setPreviewChannel("inApp")
+                                    handlePreview(broadcast)
+                                  }}
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                  {broadcast.channels.inApp}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Click to preview broadcasted message</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="outline"
+                                  className="gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                  onClick={() => {
+                                    setPreviewChannel("push")
+                                    handlePreview(broadcast)
+                                  }}
+                                >
+                                  <Bell className="h-4 w-4" />
+                                  {broadcast.channels.push}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Click to preview broadcasted message</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="outline"
+                                  className="gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                  onClick={() => {
+                                    setPreviewChannel("sms")
+                                    handlePreview(broadcast)
+                                  }}
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                  {broadcast.channels.sms}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Click to preview broadcasted message</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     ))}
@@ -883,6 +1002,131 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
         </div>
       </main>
 
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Broadcast Preview</DialogTitle>
+            <DialogDescription>Preview how your broadcast will appear across different channels</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Channel Selection */}
+            <div className="flex gap-3 justify-center">
+              <Button
+                variant={previewChannel === "email" ? "default" : "outline"}
+                size="lg"
+                onClick={() => setPreviewChannel("email")}
+                className="gap-2"
+              >
+                <Mail className="h-5 w-5" />
+                Email
+              </Button>
+              <Button
+                variant={previewChannel === "inApp" ? "default" : "outline"}
+                size="lg"
+                onClick={() => setPreviewChannel("inApp")}
+                className="gap-2"
+              >
+                <MessageSquare className="h-5 w-5" />
+                In-App
+              </Button>
+              <Button
+                variant={previewChannel === "push" ? "default" : "outline"}
+                size="lg"
+                onClick={() => setPreviewChannel("push")}
+                className="gap-2"
+              >
+                <Bell className="h-5 w-5" />
+                Push
+              </Button>
+              <Button
+                variant={previewChannel === "sms" ? "default" : "outline"}
+                size="lg"
+                onClick={() => setPreviewChannel("sms")}
+                className="gap-2"
+              >
+                <MessageCircle className="h-5 w-5" />
+                SMS
+              </Button>
+            </div>
+
+            {/* Preview Content */}
+            <Card>
+              <CardContent className="p-6">
+                {previewChannel === "email" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-semibold text-muted-foreground">Subject:</label>
+                      <p className="text-lg font-semibold mt-1">
+                        {getPreviewContent("email", previewBroadcast).subject}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-muted-foreground">Body:</label>
+                      <div className="mt-2 p-4 bg-muted rounded-lg whitespace-pre-line">
+                        {getPreviewContent("email", previewBroadcast).body}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {previewChannel === "inApp" && (
+                  <div className="space-y-4">
+                    <div className="border rounded-lg p-4 bg-card">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                          <Bell className="h-5 w-5 text-primary-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{getPreviewContent("inApp", previewBroadcast).title}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {getPreviewContent("inApp", previewBroadcast).message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">Just now</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {previewChannel === "push" && (
+                  <div className="space-y-4">
+                    <div className="max-w-sm mx-auto">
+                      <div className="bg-card border rounded-xl p-4 shadow-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                            <Bell className="h-4 w-4 text-primary-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm">
+                              {getPreviewContent("push", previewBroadcast).title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {getPreviewContent("push", previewBroadcast).body}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {previewChannel === "sms" && (
+                  <div className="space-y-4">
+                    <div className="max-w-sm mx-auto">
+                      <div className="bg-primary text-primary-foreground rounded-2xl rounded-bl-sm p-4">
+                        <p className="text-sm">{getPreviewContent("sms", previewBroadcast).message}</p>
+                        <p className="text-xs opacity-70 mt-2">Delivered</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -973,3 +1217,5 @@ export function BroadcastClient({ userTypes, tags, schemas, users }: BroadcastCl
     </div>
   )
 }
+
+export default BroadcastClient
