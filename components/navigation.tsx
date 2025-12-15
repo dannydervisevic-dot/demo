@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Users, Bell, Send, LayoutDashboard, Layers, Zap } from "lucide-react"
+import { Users, Bell, Send, LayoutDashboard, Layers, Radio } from "lucide-react"
 
 const navItems = [
   {
@@ -29,12 +29,12 @@ const navItems = [
   {
     label: "Trigger Notification",
     href: "/trigger-notification",
-    icon: Zap,
+    icon: Send,
   },
   {
     label: "Broadcast",
     href: "/broadcast",
-    icon: Send,
+    icon: Radio,
   },
 ]
 
